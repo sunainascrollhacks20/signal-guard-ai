@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env
+.env.local
+
+# Local runtime data
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Local uploaded/demo videos
+uploads/*.mp4
+
+# TypeScript build cache
+*.tsbuildinfo

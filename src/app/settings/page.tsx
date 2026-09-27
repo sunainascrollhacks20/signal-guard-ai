@@ -1,0 +1,15 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Save, Settings as SettingsIcon } from 'lucide-react';
+import { api } from '@/lib/api-client';
+
+interface Settings { processingFps: number; confidenceThreshold: number; verificationSensitivity: 'Low' | 'Medium' | 'High'; }
+
+export default function SettingsPage() {
+  const [settings, setSettings] = useState<Settings>({ processingFps: 2, confidenceThreshold: 0.35, verificationSensitivity: 'Medium' });
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { api.get<{ settings: Settings }>('/api/settings').then((data) => setSettings(data.settings)).catch(() => {}); }, []);
+  const save = async () => { try { const data = await api.request<{ settings: Settings }>('/api/settings', { method: 'PUT', body: JSON.stringify(settings) }); setSettings(data.settings); setSaved(true); setTimeout(() => setSaved(false), 2000); } catch {} };
+  return <div className="space-y-6"><div><h1 className="text-3xl font-bold text-white mb-2">Settings</h1><p className="text-slate-400">Controls used by the local frame-analysis worker</p></div><section className="bg-slate-800 border border-slate-700 rounded-xl p-6"><h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><SettingsIcon className="w-5 h-5 text-cyan-400" />Processing Settings</h2><div className="space-y-4"><label className="block text-sm text-slate-300">Processing FPS<input type="number" min="1" max="10" value={settings.processingFps} onChange={(event) => setSettings({ ...settings, processingFps: Number(event.target.value) })} className="mt-2 w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white" /><span className="block text-xs text-slate-500 mt-1">Frames sampled per second.</span></label><label className="block text-sm text-slate-300">Confidence Threshold<input type="number" min="0" max="1" step="0.05" value={settings.confidenceThreshold} onChange={(event) => setSettings({ ...settings, confidenceThreshold: Number(event.target.value) })} className="mt-2 w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white" /><span className="block text-xs text-slate-500 mt-1">Frames below this measured confidence are excluded.</span></label><label className="block text-sm text-slate-300">Verification Sensitivity<select value={settings.verificationSensitivity} onChange={(event) => setSettings({ ...settings, verificationSensitivity: event.target.value as Settings['verificationSensitivity'] })} className="mt-2 w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white"><option>Low</option><option>Medium</option><option>High</option></select><span className="block text-xs text-slate-500 mt-1">Changes the multi-cue threshold for candidate verification.</span></label><button onClick={save} className="w-full px-4 py-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 flex items-center justify-center gap-2"><Save className="w-4 h-4" />{saved ? 'Saved' : 'Save Settings'}</button></div></section></div>;
+}
